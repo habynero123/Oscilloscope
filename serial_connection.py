@@ -46,10 +46,10 @@ class SerialConnection(Thread):
 		self.connection.close()
 
 	def run(self):
-		print "starting up the socket listener"
+		print("starting up the socket listener")
 		while self.running:
 			self.read(numBytes=100)
-		print "shutting down the socket listener"
+		print("shutting down the socket listener")
 		self.shutdown()
 
 	def read(self, numBytes=0):

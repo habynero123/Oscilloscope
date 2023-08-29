@@ -53,10 +53,10 @@ class SocketConnection(Thread):
 		# self.tx_socket.sendto("method raw", (self.address, int(self.port)))
 		self.tx_socket.sendto("channels 1", (self.address, int(self.port)))
 		self.tx_socket.sendto("start", (self.address, int(self.port)))
-		print "size={window_size}".format(window_size=self.window_size), (self.address, int(self.port))
+		print("size={window_size}".format(window_size=self.window_size), (self.address, int(self.port)))
 
 	def run(self):
-		print "starting up the socket listener"
+		print("starting up the socket listener")
 		self.tx_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
 		self.rx_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
 		self.init_adc()
@@ -66,7 +66,7 @@ class SocketConnection(Thread):
 		while self.running:
 			self.read(numBytes=40960)
 			#print len(self.channel_1_samples), self.num_samples
-		print "shutting down the socket listener"
+		print("shutting down the socket listener")
 		self.shutdown()
 
 	def read(self, numBytes=0):
@@ -108,4 +108,4 @@ class SocketConnection(Thread):
 						continue
 						#print "oh no!", element
 		except Exception as e:
-			print e
+			print(e)

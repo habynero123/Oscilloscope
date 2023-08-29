@@ -190,7 +190,7 @@ class MainWindow(wx.Frame):
 		rad_trigger_off 	= self._create_item(wx.RadioButton, wx.EVT_RADIOBUTTON, self.sync_off, control_panel, wx.ID_ANY, "No sync", style=wx.RB_GROUP)
 		rad_trigger_rise 	= self._create_item(wx.RadioButton, wx.EVT_RADIOBUTTON, self.sync_on_rise, control_panel, wx.ID_ANY, "Rising edge")
 		rad_trigger_fall	= self._create_item(wx.RadioButton, wx.EVT_RADIOBUTTON, self.sync_on_fall, control_panel, wx.ID_ANY, "Falling edge")
-		ch_rate				= self._create_item(wx.Choice, wx.EVT_CHOICE, self.adjust_sample_rate, control_panel, wx.ID_ANY, choices=[str(int(BASE_RATE / float(i))) for i in xrange(1, 11)])
+		ch_rate				= self._create_item(wx.Choice, wx.EVT_CHOICE, self.adjust_sample_rate, control_panel, wx.ID_ANY, choices=[str(int(BASE_RATE / float(i))) for i in range(1, 11)])
 		cb_fft 				= self._create_item(wx.CheckBox, wx.EVT_CHECKBOX, self.toggle_fft, control_panel, wx.ID_ANY, "Spectrum")
 		sc_win_size			= self._create_item(wx.SpinCtrl, wx.EVT_SPINCTRL, self.adjust_window_size, control_panel, wx.ID_ANY, initial=100, min=10, max=1000)
 		sc_phase	 		= self._create_item(wx.SpinCtrl, wx.EVT_SPINCTRL, self.adjust_phase, control_panel, wx.ID_ANY, initial=0, min=-10, max=100)
@@ -260,13 +260,14 @@ class MainWindow(wx.Frame):
 		slider_trigger_level = wx.Slider(
 			plot_panel,
 			wx.ID_ANY,
-			50. * (MAX_VOLTAGE - MIN_VOLTAGE),
-			100. * MIN_VOLTAGE,
-			100. * MAX_VOLTAGE,
-			style=wx.SL_VERTICAL | wx.SL_INVERSE)
+			int(50. * (MAX_VOLTAGE - MIN_VOLTAGE)),
+			int(100. * MIN_VOLTAGE),
+			int(100. * MAX_VOLTAGE),
+			style=wx.SL_VERTICAL | wx.SL_INVERSE
+		)
+
 		slider_trigger_level.SetBackgroundColour("black")
 		self.Bind(wx.EVT_SLIDER, self.adjust_trigger_level, slider_trigger_level)
-
 		self.plot_canvas = plot.PlotCanvas(plot_panel)
 		self.plot_canvas.SetBackgroundColour("black")
 		self.plot_canvas.SetForegroundColour("green")

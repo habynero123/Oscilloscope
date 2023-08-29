@@ -69,10 +69,10 @@ class Oscilloscope(object):
 	def shutdown(self):
 		self.running = False
 		self.connection.shutdown()
-		print "NUMBER OF SAMPLES:{0}".format(self.total_num_samples)
+		print("NUMBER OF SAMPLES:{0}".format(self.total_num_samples))
 
 	def process_message(self, message):
-		print "Oscilloscope received message: {message}".format(message=message)
+		print("Oscilloscope received message: {message}".format(message=message))
 		if message[0] == "shutdown":
 			self.shutdown()
 		elif message[0] == "stop":
@@ -100,7 +100,7 @@ class Oscilloscope(object):
 		elif message[0] == "phase_offset":
 			self.phase_offset = message[1]
 		else:
-			print "Oscilloscope received unknown message: {message}".format(message=message[0])
+			print("Oscilloscope received unknown message: {message}".format(message=message[0]))
 
 	def pop_queue(self, queue):
 		try:
