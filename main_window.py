@@ -310,7 +310,7 @@ class MainWindow(wx.Frame):
 
 	def show_help(self, event):
 		info 			= wx.adv.AboutDialogInfo()
-		info.Name 		= "PirateScope"
+		info.Name 		= "Oscilloscope"
 		info.Copyright 	= "(C) 2010 Tim Vaughan"
 		info.License 	= wordwrap(
 			"This program is free software: you can redistribute it and/or modify "
@@ -504,5 +504,5 @@ class MainWindow(wx.Frame):
 # Main program loop:
 if __name__ == '__main__':
 	app = wx.App(False)
-	frame = MainWindow(None, 'PirateScope')
+	frame = MainWindow(None, 'Oscilloscope')
 	app.MainLoop()
