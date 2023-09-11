@@ -5,12 +5,15 @@ import wx.adv
 from wx.lib import plot
 from wx.lib.wordwrap import wordwrap
 from numpy.fft import rfft
+from multiprocessing import Process, Queue
+
 
 from oscilloscope import Oscilloscope, SYNC_NONE, SYNC_RISE, SYNC_FALL, MODE_CONTINUOUS, MODE_ONESHOT, MIN_VOLTAGE, MAX_VOLTAGE, BASE_RATE
-from multiprocessing import Process, Queue
+from ui.device_dialog import DeviceDialog
 
 # SERIAL_PORT		= "COM3"
 SERIAL_PORT		= "192.168.2.48:8181"
+
 
 class MainWindow(wx.Frame):
 	def __init__(self, parent, title):
@@ -56,7 +59,6 @@ class MainWindow(wx.Frame):
 		self.instruction_queue.put(("trigger_voltage", self.trigger_voltage))
 		self.instruction_queue.put(("phase_offset", self.phase_offset))
 
-
 		self.timer = wx.Timer(self)
 		self.Bind(wx.EVT_TIMER, self.OnUpdate, self.timer)
 		self.create_ui()
@@ -75,7 +77,7 @@ class MainWindow(wx.Frame):
 
 		if self.channel_1_queue.empty():
 			data = [(0, -10), (1000 * self.point_width, -10)]
-			plotlist = [plot.PolyLine(data, colour='red', width=2)]
+			plotlist = [plot.PolyLine(points=data, colour='red', width=2)]
 		else:
 			# if self.last_point_time > 0:
 			# 	cur_point_time = self.oscilloscope.dt
@@ -112,19 +114,19 @@ class MainWindow(wx.Frame):
 					plotrange = (0., max(channel_1_vdata))
 
 			plotlist = [
-						plot.PolyLine(channel_1_data, colour="red", width=2)
-						# plot.PolyLine(channel_2_data, colour="blue", width=2)
+						plot.PolyLine(points=channel_1_data, colour="red", width=2)
+						# plot.PolyLine(points=channel_2_data, colour="blue", width=2)
 			]
 
 		# Plot trigger voltage level
 		if self.trigger_level:
 			triglev_dat = [(0, self.trigger_voltage), (1000 * self.point_width, self.trigger_voltage)]
-			plotlist.append(plot.PolyLine(triglev_dat, colour='red', style=wx.PENSTYLE_LONG_DASH, width=2))
+			plotlist.append(plot.PolyLine(points=triglev_dat, colour='red', style=wx.PENSTYLE_LONG_DASH, width=2))
 
 		# Plot trigger origin time
 		if self.trigger_origin:
 			trigorig_dat = [(-self.phase_offset * 10. * self.point_width, -1), (-self.phase_offset * 10 * self.point_width, 7)]
-			plotlist.append(plot.PolyLine(trigorig_dat, colour='blue', style=wx.PENSTYLE_LONG_DASH, width=2))
+			plotlist.append(plot.PolyLine(points=trigorig_dat, colour='blue', style=wx.PENSTYLE_LONG_DASH, width=2))
 
 		graphics = plot.PlotGraphics(plotlist, '', 'Time (ms)', 'Voltage')
 		return graphics, plotdomain, plotrange
@@ -145,18 +147,39 @@ class MainWindow(wx.Frame):
 			plotdomain = (0, (self.points_per_graph / 2 - 1) / (self.points_per_graph * self.sampdt))
 			plotrange = (0, 1)
 
-		plotlist 	= [plot.PolyLine(data, colour='green', width=1)]
+		plotlist 	= [plot.PolyLine(points=data, colour='green', width=1)]
 		graphics	= plot.PlotGraphics(plotlist, '', 'Frequency (Hz)', 'Amplitude')
 		return graphics, plotdomain, plotrange
 
 	def create_ui(self):
-		main = wx.Panel(self)
+		main_panel = wx.Panel(self)
 		self.create_menu()
-		controls = self.create_control_panel(main)
-		self.create_plot_panel(main, controls)
-
+		controls = self.create_control_panel(main_panel)
+		self.create_plot_panel(main_panel, controls)
 		self.CreateStatusBar()
 		self.Show(True)
+
+	# Set Bus Pirate serial device:
+
+	def set_device(self, event):
+		print("Setting device")
+		self.instruction_queue.put(("port", self.port))
+
+	def select_device(self, event):
+		#cb_devices = wx.ComboBox(self, -1, choices=self.get_usb_devices(), style=wx.TE_PROCESS_ENTER)
+		#cb_devices.Bind(wx.EVT_COMBOBOX, self.set_device)
+		dlg = DeviceDialog(self)
+		# dlg = wx.TextEntryDialog(
+		# 	self,
+		# 	"Please enter full path of Bus Pirate serial device:",
+		# 	"Set Bus Pirate Device",
+		# 	self.port)
+		print("TEST")
+		# if dlg.ShowModal() == wx.ID_OK:
+		dlg.ShowModal()
+		print("NOPE")
+		#self.oscilloscope.port = self.port
+		# dlg.Destroy()
 
 	# Menu initialization subroutine:
 	def create_menu(self):
@@ -167,7 +190,7 @@ class MainWindow(wx.Frame):
 		self._append_to_menu(file_menu, wx.ID_ANY, "&Save Sample", "Save sample to file", wx.EVT_MENU, self.save_sample)
 		self._append_to_menu(file_menu)
 		self._append_to_menu(file_menu, wx.ID_ANY, "Save &Graph", "Save graph to file", wx.EVT_MENU, self.save_graph)
-		self._append_to_menu(file_menu, wx.ID_ANY, "Set Bus Pirate &Device", "Set Bus Pirate serial device.", wx.EVT_MENU, self.set_device)
+		self._append_to_menu(file_menu, wx.ID_ANY, "Select &Oscilloscope", "Select the oscilloscope", wx.EVT_MENU, self.select_device)
 		self._append_to_menu(file_menu)
 		self._append_to_menu(file_menu, wx.ID_EXIT, "E&xit", "Terminate the program.", wx.EVT_MENU, self.exit_app)
 
@@ -185,8 +208,8 @@ class MainWindow(wx.Frame):
 		menu_bar.Append(help_menu, "&Help")
 		self.SetMenuBar(menu_bar)
 
-	def create_control_panel(self, main_panel):
-		control_panel 		= self._create_item(wx.Panel, None, None, main_panel, style=wx.BORDER_SUNKEN)
+	def create_control_panel(self, panel):
+		control_panel 		= self._create_item(wx.Panel, None, None, panel, style=wx.BORDER_SUNKEN)
 		rad_trigger_off 	= self._create_item(wx.RadioButton, wx.EVT_RADIOBUTTON, self.sync_off, control_panel, wx.ID_ANY, "No sync", style=wx.RB_GROUP)
 		rad_trigger_rise 	= self._create_item(wx.RadioButton, wx.EVT_RADIOBUTTON, self.sync_on_rise, control_panel, wx.ID_ANY, "Rising edge")
 		rad_trigger_fall	= self._create_item(wx.RadioButton, wx.EVT_RADIOBUTTON, self.sync_on_fall, control_panel, wx.ID_ANY, "Falling edge")
@@ -334,19 +357,6 @@ class MainWindow(wx.Frame):
 			350,
 			wx.ClientDC(self))
 		wx.adv.AboutBox(info)
-
-	# Set Bus Pirate serial device:
-	def set_device(self, event):
-		dlg = wx.TextEntryDialog(
-			self,
-			"Please enter full path of Bus Pirate serial device:",
-			"Set Bus Pirate Device",
-			self.port)
-		if dlg.ShowModal() == wx.ID_OK:
-			self.port = dlg.GetValue()
-		self.instruction_queue.put(("port", self.port))
-		#self.oscilloscope.port = self.port
-		dlg.Destroy()
 
 	def OnUpdate(self, event):
 		self.update_plot()
@@ -498,9 +508,9 @@ class MainWindow(wx.Frame):
 		if self.oscilloscope:
 			#self.oscilloscope.shutdown()
 			self.instruction_queue.put(("shutdown", ""))
-
 			time.sleep(0.5)
 		self.Close(True)
+
 
 # Main program loop:
 if __name__ == '__main__':

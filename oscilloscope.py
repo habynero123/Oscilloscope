@@ -68,7 +68,8 @@ class Oscilloscope(object):
 
 	def shutdown(self):
 		self.running = False
-		self.connection.shutdown()
+		if self.connection:
+			self.connection.shutdown()
 		print("NUMBER OF SAMPLES:{0}".format(self.total_num_samples))
 
 	def process_message(self, message):
@@ -106,7 +107,7 @@ class Oscilloscope(object):
 		try:
 			return queue.get_nowait()
 		except Exception as e:
-			return  False
+			return False
 
 	def start_connection(self):
 		if self.port :

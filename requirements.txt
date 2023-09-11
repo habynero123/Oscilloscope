@@ -1,3 +1,5 @@
+pyusb
+libusb
 wxPython
 serial
 numpy
